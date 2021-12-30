@@ -1,7 +1,7 @@
 led-matrix-maze-generator := ./led-matrix-maze-generator
 rpi-rgb-led-matrix := $(led-matrix-maze-generator)/rpi-rgb-led-matrix
 rpi-rgb-led-matrix_repo := git@github.com:jesseDMoore1994/rpi-rgb-led-matrix.git
-rpi-rgb-led-matrix_branch := master
+rpi-rgb-led-matrix_branch := maze-generation
 rpi-rgb-led-matrix_lib := $(rpi-rgb-led-matrix)/lib
 rpi-rgb-led-matrix_inc := $(rpi-rgb-led-matrix)/include
 rpi-rgb-led-matrix_libname := rgbmatrix
@@ -38,12 +38,15 @@ CFLAGS=-W -Wall -Wextra -Wno-unused-parameter -O3 -g -fPIC
 CXXFLAGS=$(CFLAGS)
 LDFLAGS+=-L$(rpi-rgb-led-matrix_lib) -l$(rpi-rgb-led-matrix_libname) -lrt -lm -lpthread
 
-HARDWARE_DESC ?= 'adafruit-hat'
+HARDWARE_DESC ?= adafruit-hat
 
-.PHONY: all deploy clean clean-all
+.PHONY: all toolshell deploy clean clean-all
 
 all: $(toolchain) $(rpi-rgb-led-matrix)
 	$(build_env) $(MAKE) $(output)
+
+toolshell: $(toolchain) $(rpi-rgb-led-matrix)
+	$(build_env) bash
 
 $(objects): %.o: $(srcs)
 	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $*.cc
