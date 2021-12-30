@@ -8,7 +8,7 @@ rpi-rgb-led-matrix_libname := rgbmatrix
 rpi-rgb-led-matrix_static_lib := $(rpi-rgb-led-matrix_lib)/lib$(rpi-rgb-led-matrix_libname).a
 docker := docker
                
-executables := maze
+executables := maze-generator
 output_folder := maze-dist
 output := $(addprefix $(output_folder)/, $(executables))
 srcs := $(wildcard $(led-matrix-maze-generator)/*.cc)
