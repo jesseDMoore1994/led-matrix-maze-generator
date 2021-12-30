@@ -15,6 +15,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "direction.h"
+
 // TODO: Make ROWS and COLS variable, and make
 // GRID_WIDTH and GRID_HEIGHT a function of
 // ROWS and COLS.
@@ -31,18 +33,6 @@ static void InterruptHandler(int signo) {
 }
 
 /* -- USER DEFINED EXCEPTIONS --*/
-struct DirectionException : public std::exception
-{
-  const char* msg;
-  DirectionException(const char* msg) {
-    this->msg = msg;
-  }
-  const char* what () const throw ()
-  {
-    return this->msg;
-  }
-};
-
 struct CellException : public std::exception
 {
   const char* msg;
@@ -62,30 +52,6 @@ struct HuntNotSuccessful : public std::exception
     return "Could not successfully find an unvisited cell";
   }
 };
-
-/*-- DIRECTION TYPING --*/
-#define MAX_NUMBER_OF_NEIGHBORS 4
-enum direction {Left, Up, Right, Down};
-constexpr std::initializer_list<direction> all_directions = {Left, Up, Right, Down};
-
-// define a helper function to get the opposite direction
-direction getOppositeDir(direction dir) {
-  if (dir == Left) {
-    return Right;
-  }
-  else if (dir == Right) {
-    return Left;
-  }
-  else if (dir == Up) {
-    return Down;
-  }
-  else if (dir == Down) {
-    return Up;
-  }
-  else {
-    throw DirectionException("A direction that is not defined was attempted for use.");
-  }
-}
 
 /*-- CELL DEFINITION --*/
 class Cell {

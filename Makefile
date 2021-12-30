@@ -11,8 +11,8 @@ docker := docker
 executables := maze
 output_folder := maze-dist
 output := $(addprefix $(output_folder)/, $(executables))
-objects := $(addprefix $(led-matrix-maze-generator)/, $(addsuffix .o, $(executables)))
-srcs := $(addprefix $(led-matrix-maze-generator)/, $(addsuffix .cc,$(executables)))
+srcs := $(wildcard $(led-matrix-maze-generator)/*.cc)
+objects := $(patsubst %.cc,%.o,$(srcs))
 
 docker_interactive := $(shell test -t 0 && echo "-it")
 docker_args ?= $(docker_interactive) \
@@ -45,12 +45,12 @@ HARDWARE_DESC ?= 'adafruit-hat'
 all: $(toolchain) $(rpi-rgb-led-matrix)
 	$(build_env) $(MAKE) $(output)
 
-$(objects): $(srcs) 
-	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $<
+$(objects): %.o: $(srcs)
+	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $*.cc
 
-$(output): $(output_folder)/%: $(led-matrix-maze-generator)/%.o $(rpi-rgb-led-matrix_static_lib)
+$(output): $(output_folder)/%: $(objects) $(rpi-rgb-led-matrix_static_lib)
 	mkdir -p $(output_folder)
-	$(CXX) $< -o $@ $(LDFLAGS)
+	$(CXX) $(objects) -o $@ $(LDFLAGS)
 
 $(toolchain):
 ifeq ($(CROSS_COMPILE),y)
