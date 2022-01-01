@@ -1,15 +1,15 @@
 #include "hunt-and-kill.h"
-#include "maze.h"
-#include <exception>
+
 #include <time.h>
 #include <unistd.h>
 
+#include <exception>
+
+#include "maze.h"
 
 extern bool interrupt_received;
 
-
-const char* HuntNotSuccessful::what () const throw ()
-{
+const char *HuntNotSuccessful::what() const throw() {
   return "Could not successfully find an unvisited cell";
 }
 
@@ -17,7 +17,7 @@ const char* HuntNotSuccessful::what () const throw ()
 // Hunt and kill strategy which takes a grid object
 // and generates a Maze
 void HuntAndKillStrategy::generate() {
-  auto walk = [&] (Cell cell) {
+  auto walk = [&](Cell cell) {
     // create current cell from passed in cell
     Cell current_cell = cell;
 
@@ -27,7 +27,8 @@ void HuntAndKillStrategy::generate() {
         return;
       }
 
-      // decide the next direction at random from the unvisited cells around this one.
+      // decide the next direction at random from the unvisited cells around
+      // this one.
       direction dir = current_cell.getRandomDirectionWithVisitedStatus(false);
       //
       // connect current cell to neighbor and update it
@@ -44,15 +45,13 @@ void HuntAndKillStrategy::generate() {
     }
   };
 
-  auto hunt = [&] () {
-    auto findTargetCell = [&] () {
+  auto hunt = [&]() {
+    auto findTargetCell = [&]() {
       auto cells = this->g->getCells();
       for (std::size_t i = 0; i < cells.size(); i++) {
         for (std::size_t j = 0; j < cells[i].size(); j++) {
-          if (cells[i][j].isVisited())
-            continue;
-          if (!cells[i][j].hasNeighborsWithVisitedStatus(true))
-            continue;
+          if (cells[i][j].isVisited()) continue;
+          if (!cells[i][j].hasNeighborsWithVisitedStatus(true)) continue;
           return this->g->getCell(i, j);
         }
       }
@@ -78,20 +77,17 @@ void HuntAndKillStrategy::generate() {
     c.noColorEnforce();
     this->g->setCell(c);
     return c;
-
   };
 
   auto cell = this->g->getRandomCell();
   cell.visit();
   this->g->setCell(cell);
-  while(true) {
+  while (true) {
     try {
-      if (interrupt_received)
-        return;
+      if (interrupt_received) return;
       walk(cell);
       cell = hunt();
-    }
-    catch (HuntNotSuccessful& e) {
+    } catch (HuntNotSuccessful &e) {
       break;
     }
   }

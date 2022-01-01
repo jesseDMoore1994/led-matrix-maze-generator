@@ -7,7 +7,7 @@ rpi-rgb-led-matrix_inc := $(rpi-rgb-led-matrix)/include
 rpi-rgb-led-matrix_libname := rgbmatrix
 rpi-rgb-led-matrix_static_lib := $(rpi-rgb-led-matrix_lib)/lib$(rpi-rgb-led-matrix_libname).a
 docker := docker
-               
+
 executables := maze-generator
 output-folder := maze-dist
 output := $(addprefix $(output-folder)/, $(executables))
@@ -22,7 +22,7 @@ docker-args ?= $(docker-interactive) \
 			   -e "CFLAGS=$(CFLAGS)" \
 			   -e "CXXFLAGS=$(CXXFLAGS)" \
 			   -e "INCDIRS=$(INCDIRS)" \
-			   -v $(shell pwd):/work 
+			   -v $(shell pwd):/work
 
 build-env =
 CROSS_COMPILE ?= y
@@ -33,7 +33,7 @@ maze-generator-builder-version := 1.0.0
 docker-toolchain ?= maze_generator_builder_$(MAZE_GENERATOR_DOCKCROSS_BASE):$(maze-generator-builder-version)
 build-env += $(docker) run $(docker-args) $(docker-toolchain)
 else
-endif     
+endif
 
 INCDIRS=$(rpi-rgb-led-matrix_inc)
 inc=$(addprefix -I,$(INCDIRS))
@@ -51,9 +51,12 @@ all: $(toolchain) $(rpi-rgb-led-matrix)
 toolshell: $(toolchain) $(rpi-rgb-led-matrix)
 	$(build-env) bash
 
-FORMAT_STYLE ?= GNU
+FORMAT_STYLE ?= Google
 format: $(toolchain)
-	$(build-env) clang-format -i --style=$(FORMAT_STYLE) $(srcs) $(headers)
+	$(build-env) bash -c " \
+	    cd $(led-matrix-maze-generator); \
+		clang-format -i --style=$(FORMAT_STYLE) *.cc *h; \
+	"
 
 $(objects): %.o: $(srcs)
 	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $*.cc

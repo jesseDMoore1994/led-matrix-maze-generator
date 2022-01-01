@@ -4,12 +4,12 @@
 #include "grid.h"
 
 class GenerationStrategy {
-  protected:
-    Grid* g;
+ protected:
+  Grid *g;
 
-  public:
-    GenerationStrategy(Grid* g);
-    virtual void generate() = 0;
+ public:
+  GenerationStrategy(Grid *g);
+  virtual void generate() = 0;
 };
 
 #endif
