@@ -43,27 +43,13 @@ LDFLAGS+=-L$(rpi-rgb-led-matrix_lib) -l$(rpi-rgb-led-matrix_libname) -lrt -lm -l
 
 HARDWARE_DESC ?= adafruit-hat
 
-.PHONY: all toolshell format deploy clean clean-all
+# DEFAULT ALL TARGET
 
-all: $(toolchain) $(rpi-rgb-led-matrix)
-	$(build-env) $(MAKE) $(output)
+.PHONY: all
 
-toolshell: $(toolchain) $(rpi-rgb-led-matrix)
-	$(build-env) bash
+all: build test
 
-FORMAT_STYLE ?= Google
-format: $(toolchain)
-	$(build-env) bash -c " \
-	    cd $(led-matrix-maze-generator); \
-		clang-format -i --style=$(FORMAT_STYLE) *.cc *h; \
-	"
-
-$(objects): %.o: $(srcs)
-	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $*.cc
-
-$(output): $(output-folder)/%: $(objects) $(rpi-rgb-led-matrix_static_lib)
-	mkdir -p $(output-folder)
-	$(CXX) $(objects) -o $@ $(LDFLAGS)
+# TOOLCHAIN TARGETS
 
 $(toolchain):
 ifeq ($(CROSS_COMPILE),y)
@@ -75,6 +61,17 @@ else
 	touch $@
 endif
 
+# BUILD TARGETS
+
+.PHONY: build
+
+$(objects): %.o: $(srcs)
+	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $*.cc
+
+$(output): $(output-folder)/%: $(objects) $(rpi-rgb-led-matrix_static_lib)
+	mkdir -p $(output-folder)
+	$(CXX) $(objects) -o $@ $(LDFLAGS)
+
 $(rpi-rgb-led-matrix):
 	git clone --branch $(rpi-rgb-led-matrix_branch) \
 		$(rpi-rgb-led-matrix_repo) \
@@ -82,6 +79,57 @@ $(rpi-rgb-led-matrix):
 
 $(rpi-rgb-led-matrix_static_lib): $(rpi-rgb-led-matrix) $(toolchain)
 	$(MAKE) -C $(rpi-rgb-led-matrix)
+
+build: $(toolchain) $(rpi-rgb-led-matrix)
+	$(build-env) $(MAKE) $(output)
+
+# TEST TARGETS
+#
+.PHONY: test
+
+testdir = test
+test-executable = test-maze-generator
+test-srcs := $(wildcard $(testdir)/*.cc)
+test-objects := $(patsubst %.cc,%.o,$(test-srcs))
+test-executable := $(addprefix $(output-folder)/, test_maze_generator)
+doctest = $(testdir)/doctest.h
+doctest-license = $(testdir)/DOCKTEST_LICENSE.txt
+DOCTEST_VERSION ?= 2.4.7
+
+TEST_INCDIRS=./TEST
+test-inc=$(inc) $(addprefix -I,$(TEST INCDIRS))
+
+$(doctest):
+	wget -O $@ \
+		https://raw.githubusercontent.com/onqtam/doctest/$(DOCTEST_VERSION)/doctest/doctest.h
+	wget -O $(doctest-license) \
+		https://github.com/doctest/doctest/blob/$(DOCTEST_VERSION)/LICENSE.txt
+
+$(test-objects): %.o: $(test-srcs)
+	$(CXX) $(test-inc) $(CXXFLAGS) -c -o $@ $*.cc
+
+$(test-executable): $(output-folder)/%: $(src-objects) $(test-objects) $(doctest)
+	mkdir -p $(output-folder)
+	$(CXX) $(test-objects) -o $@ $(LDFLAGS)
+
+test: $(output) $(doctest)
+	$(build-env) $(MAKE) $(test-executable)
+	$(MAKE) deploy
+	ssh $(DEPLOY_USERNAME)@$(DEPLOY_HOST) ./$(test-executable)
+
+# UTILITY TARGETS
+
+.PHONY: toolshell format deploy clean clean-all
+
+toolshell: $(toolchain) $(rpi-rgb-led-matrix)
+	$(build-env) bash
+
+FORMAT_STYLE ?= Google
+format: $(toolchain)
+	$(build-env) bash -c " \
+	    cd $(led-matrix-maze-generator); \
+		clang-format -i --style=$(FORMAT_STYLE) *.cc *h; \
+	"
 
 DEPLOY_USERNAME ?= pi
 DEPLOY_HOST ?= 10.0.0.88
@@ -92,10 +140,11 @@ deploy:
 		$(DEPLOY_USERNAME)@$(DEPLOY_HOST):$(DEPLOY_DIR)
 
 clean:
-	rm -rf $(output-folder) $(objects)
+	rm -rf $(output-folder) $(objects) $(test-objects) $(test-output)
 
-clean-all:
-	rm -rf $(rpi-rgb-led-matrix) $(toolchain) $(output-folder) $(objects)
+clean-all: clean
+	rm -rf $(rpi-rgb-led-matrix) $(toolchain) $(output-folder) $(objects) \
+		$(doctest) $(doctest-license)
 	bash -c " \
 	    docker rmi -f $$(docker images -aq $(docker-toolchain)) \
     "
