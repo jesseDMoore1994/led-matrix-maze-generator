@@ -10,6 +10,7 @@
 #include "cell.h"
 #include "grid.h"
 #include "maze.h"
+#include "hunt-and-kill.h"
 
 #define DEFAULT_ROWS 64
 #define DEFAULT_COLS 64
@@ -36,7 +37,7 @@ static void usage(
 rgb_matrix::Canvas* init_canvas_from_opts (int argc, char **argv) {
   srand(time(NULL));
 
-  rgb_matrix::RGBMatrix::Options led_options;        
+  rgb_matrix::RGBMatrix::Options led_options;
   rgb_matrix::RuntimeOptions runtime;
 
   // Set defaults
@@ -85,7 +86,9 @@ int main(int argc, char **argv) {
       int grid_width = canvas->width()/2;
 
       //Create a maze and tell it to generate
-      Maze m(canvas, grid_height, grid_width);
+      Grid g = Grid(canvas, grid_height, grid_width);
+      HuntAndKillStrategy HuntAndKill = HuntAndKillStrategy(&g);
+      Maze m(&g, &HuntAndKill);
       m.generate();
 
       // sleep for a while to bask in the glory of a new maze

@@ -2,13 +2,15 @@
 #define MAZE_H
 
 #include "grid.h"
+#include "generation-strategy.h"
 
 class Maze {
   private:
-    Grid grid;
+    Grid* grid;
+    GenerationStrategy* strategy;
 
   public:
-    Maze(rgb_matrix::Canvas* canvas, unsigned int height, unsigned int width);
+    Maze(Grid* grid, GenerationStrategy* strategy);
     void generate();
 };
 

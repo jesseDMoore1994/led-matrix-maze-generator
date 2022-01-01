@@ -9,13 +9,14 @@ rpi-rgb-led-matrix_static_lib := $(rpi-rgb-led-matrix_lib)/lib$(rpi-rgb-led-matr
 docker := docker
                
 executables := maze-generator
-output_folder := maze-dist
-output := $(addprefix $(output_folder)/, $(executables))
+output-folder := maze-dist
+output := $(addprefix $(output-folder)/, $(executables))
 srcs := $(wildcard $(led-matrix-maze-generator)/*.cc)
+headers := $(patsubst %.cc,%.h,$(srcs))
 objects := $(patsubst %.cc,%.o,$(srcs))
 
-docker_interactive := $(shell test -t 0 && echo "-it")
-docker_args ?= $(docker_interactive) \
+docker-interactive := $(shell test -t 0 && echo "-it")
+docker-args ?= $(docker-interactive) \
 			   -u $(shell id -u):$(shell id -g) \
 			   -e "HARDWARE_DESC=$(HARDWARE_DESC)" \
 			   -e "CFLAGS=$(CFLAGS)" \
@@ -23,12 +24,14 @@ docker_args ?= $(docker_interactive) \
 			   -e "INCDIRS=$(INCDIRS)" \
 			   -v $(shell pwd):/work 
 
-build_env =
+build-env =
 CROSS_COMPILE ?= y
 ifeq ($(CROSS_COMPILE),y)
 toolchain := .toolchain_get
-DOCKER_TOOLCHAIN ?= dockcross/linux-armv6-lts
-build_env += $(docker) run $(docker_args) $(DOCKER_TOOLCHAIN)
+MAZE_GENERATOR_DOCKCROSS_BASE := linux-armv6-lts
+maze-generator-builder-version := 1.0.0
+docker-toolchain ?= maze_generator_builder_$(MAZE_GENERATOR_DOCKCROSS_BASE):$(maze-generator-builder-version)
+build-env += $(docker) run $(docker-args) $(docker-toolchain)
 else
 endif     
 
@@ -40,24 +43,30 @@ LDFLAGS+=-L$(rpi-rgb-led-matrix_lib) -l$(rpi-rgb-led-matrix_libname) -lrt -lm -l
 
 HARDWARE_DESC ?= adafruit-hat
 
-.PHONY: all toolshell deploy clean clean-all
+.PHONY: all toolshell format deploy clean clean-all
 
 all: $(toolchain) $(rpi-rgb-led-matrix)
-	$(build_env) $(MAKE) $(output)
+	$(build-env) $(MAKE) $(output)
 
 toolshell: $(toolchain) $(rpi-rgb-led-matrix)
-	$(build_env) bash
+	$(build-env) bash
+
+FORMAT_STYLE ?= GNU
+format: $(toolchain)
+	$(build-env) clang-format -i --style=$(FORMAT_STYLE) $(srcs) $(headers)
 
 $(objects): %.o: $(srcs)
 	$(CXX) $(inc) $(CXXFLAGS) -c -o $@ $*.cc
 
-$(output): $(output_folder)/%: $(objects) $(rpi-rgb-led-matrix_static_lib)
-	mkdir -p $(output_folder)
+$(output): $(output-folder)/%: $(objects) $(rpi-rgb-led-matrix_static_lib)
+	mkdir -p $(output-folder)
 	$(CXX) $(objects) -o $@ $(LDFLAGS)
 
 $(toolchain):
 ifeq ($(CROSS_COMPILE),y)
-	$(docker) pull $(DOCKER_TOOLCHAIN)
+	$(docker) build -t $(docker-toolchain) \
+		-f Dockerfile.$(MAZE_GENERATOR_DOCKCROSS_BASE) \
+		.
 	touch $@
 else
 	touch $@
@@ -76,14 +85,14 @@ DEPLOY_HOST ?= 10.0.0.88
 DEPLOY_DIR ?= ~
 deploy:
 	rsync -avzP \
-		$(shell pwd)/$(output_folder) \
+		$(shell pwd)/$(output-folder) \
 		$(DEPLOY_USERNAME)@$(DEPLOY_HOST):$(DEPLOY_DIR)
 
 clean:
-	rm -rf $(output_folder) $(objects)
+	rm -rf $(output-folder) $(objects)
 
 clean-all:
-	rm -rf $(rpi-rgb-led-matrix) $(toolchain) $(output_folder) $(objects)
+	rm -rf $(rpi-rgb-led-matrix) $(toolchain) $(output-folder) $(objects)
 	bash -c " \
-	    docker rmi -f $$(docker images -aq $(DOCKER_TOOLCHAIN)) \
+	    docker rmi -f $$(docker images -aq $(docker-toolchain)) \
     "
