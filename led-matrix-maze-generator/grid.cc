@@ -94,7 +94,7 @@ void Grid::draw() {
 
 // The is an accessor function to get all cells from the
 // grid for the purposes of scanning.
-std::vector<std::vector<Cell> > const Grid::getCells() { return this->cells; }
+const std::vector<std::vector<Cell> >& Grid::getCells() { return this->cells; }
 
 // The is an mutator function to set a cell in the grid
 void Grid::setCell(Cell c) {

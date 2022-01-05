@@ -7,8 +7,6 @@
 
 #include "maze.h"
 
-extern bool interrupt_received;
-
 const char *HuntNotSuccessful::what() const throw() {
   return "Could not successfully find an unvisited cell";
 }
@@ -23,10 +21,6 @@ void HuntAndKillStrategy::generate() {
 
     // while the current cell in question does not have unvisited neighbors.
     while (current_cell.hasNeighborsWithVisitedStatus(false)) {
-      if (interrupt_received) {
-        return;
-      }
-
       // decide the next direction at random from the unvisited cells around
       // this one.
       direction dir = current_cell.getRandomDirectionWithVisitedStatus(false);
@@ -84,7 +78,6 @@ void HuntAndKillStrategy::generate() {
   this->g->setCell(cell);
   while (true) {
     try {
-      if (interrupt_received) return;
       walk(cell);
       cell = hunt();
     } catch (HuntNotSuccessful &e) {

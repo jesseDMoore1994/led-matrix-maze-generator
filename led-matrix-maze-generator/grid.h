@@ -42,7 +42,7 @@ class Grid {
 
   // The is an accessor function to get all cells from the
   // grid for the purposes of scanning.
-  std::vector<std::vector<Cell> > const getCells();
+  const std::vector<std::vector<Cell> >& getCells();
 
   // The is an mutator function to set a cell in the grid
   void setCell(Cell c);
