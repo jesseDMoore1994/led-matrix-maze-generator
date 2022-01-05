@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     int grid_width = canvas->width() / 2;
 
     // Create a maze and tell it to generate
-    Grid g = Grid(canvas, grid_height, grid_width);
+    Grid g = Grid(grid_height, grid_width);
     HuntAndKillStrategy HuntAndKill = HuntAndKillStrategy(&g);
     Maze m(&g, &HuntAndKill);
     m.generate();

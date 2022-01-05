@@ -11,6 +11,7 @@ class Maze {
 
  public:
   Maze(Grid *grid, GenerationStrategy *strategy);
+  void generate_step();
   void generate();
 };
 

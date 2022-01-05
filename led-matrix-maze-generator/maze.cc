@@ -12,4 +12,6 @@ Maze::Maze(Grid *grid, GenerationStrategy *strategy) {
   this->strategy = strategy;
 }
 
-void Maze::generate() { this->strategy->generate(); }
+void Maze::generate_step() { this->strategy->step(); }
+
+void Maze::generate() { this->strategy->step_all(); }

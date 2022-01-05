@@ -35,9 +35,16 @@ build-env += $(docker) run $(docker-args) $(docker-toolchain)
 else
 endif
 
+DEBUG ?=
+ifneq ($(DEBUG),)
+debug-level-opts = -g3 -O0 -ggdb
+else
+debug-level-opts = -g -O3
+endif
+
 INCDIRS=$(rpi-rgb-led-matrix_inc)
 inc=$(addprefix -I,$(INCDIRS))
-CFLAGS=-W -Wall -Wextra -Wno-unused-parameter -O3 -g -fPIC
+CFLAGS=-W -Wall -Wextra -Wno-unused-parameter $(debug-level-opts) -fPIC
 CXXFLAGS=$(CFLAGS)
 LDFLAGS+=-L$(rpi-rgb-led-matrix_lib) -l$(rpi-rgb-led-matrix_libname) -lrt -lm -lpthread
 
@@ -88,16 +95,16 @@ build: $(toolchain) $(rpi-rgb-led-matrix)
 .PHONY: test
 
 testdir = test
-test-executable = test-maze-generator
 test-srcs := $(wildcard $(testdir)/*.cc)
+objects-without-main := $(filter-out $(led-matrix-maze-generator)/maze-generator.o,$(objects))
 test-objects := $(patsubst %.cc,%.o,$(test-srcs))
-test-executable := $(addprefix $(output-folder)/, test_maze_generator)
+test-executable := $(addprefix $(output-folder)/, test-maze-generator)
 doctest = $(testdir)/doctest.h
 doctest-license = $(testdir)/DOCKTEST_LICENSE.txt
 DOCTEST_VERSION ?= 2.4.7
 
-TEST_INCDIRS=./TEST
-test-inc=$(inc) $(addprefix -I,$(TEST INCDIRS))
+TEST_INCDIRS=$(testdir) $(led-matrix-maze-generator)
+test-inc=$(inc) $(addprefix -I,$(TEST_INCDIRS))
 
 $(doctest):
 	wget -O $@ \
@@ -110,12 +117,12 @@ $(test-objects): %.o: $(test-srcs)
 
 $(test-executable): $(output-folder)/%: $(src-objects) $(test-objects) $(doctest)
 	mkdir -p $(output-folder)
-	$(CXX) $(test-objects) -o $@ $(LDFLAGS)
+	$(CXX) $(objects-without-main) $(test-objects) -o $@ $(LDFLAGS)
 
 test: $(output) $(doctest)
 	$(build-env) $(MAKE) $(test-executable)
 	$(MAKE) deploy
-	ssh $(DEPLOY_USERNAME)@$(DEPLOY_HOST) ./$(test-executable)
+	ssh $(DEPLOY_USERNAME)@$(DEPLOY_HOST) $(led-matrix-maze-generator)/$(test-executable)
 
 # UTILITY TARGETS
 
@@ -129,6 +136,9 @@ format: $(toolchain)
 	$(build-env) bash -c " \
 	    cd $(led-matrix-maze-generator); \
 		clang-format -i --style=$(FORMAT_STYLE) *.cc *h; \
+	    cd -; \
+	    cd $(testdir); \
+		clang-format -i --style=$(FORMAT_STYLE) *.cc *h; \
 	"
 
 DEPLOY_USERNAME ?= pi
@@ -136,7 +146,7 @@ DEPLOY_HOST ?= 10.0.0.88
 DEPLOY_DIR ?= ~
 deploy:
 	rsync -avzP \
-		$(shell pwd)/$(output-folder) \
+		$(shell pwd) \
 		$(DEPLOY_USERNAME)@$(DEPLOY_HOST):$(DEPLOY_DIR)
 
 clean:
