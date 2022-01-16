@@ -10,7 +10,7 @@
 #include "maze-exceptions.h"
 
 struct SlopeDNEException : public std::exception {
-  const char* what() const throw ();
+  const char* what() const throw();
 };
 
 template <typename T1, typename T2 = Cell, typename T3 = rgb_matrix::Canvas>

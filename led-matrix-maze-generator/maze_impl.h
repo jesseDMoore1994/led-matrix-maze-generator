@@ -1,5 +1,5 @@
-const char* SlopeDNEException::what() const throw () {
-  return  "Line is vertical, slope does not exist.";
+const char* SlopeDNEException::what() const throw() {
+  return "Line is vertical, slope does not exist.";
 }
 
 template <typename T1, typename T2, typename T3>
@@ -42,18 +42,19 @@ typename Maze<T1, T2, T3>::Coord Maze<T1, T2, T3>::getCoordOfCellById(
 }
 
 template <typename T1, typename T2, typename T3>
-int Maze<T1, T2, T3>::getSlope(typename::Maze<T1, T2, T3>::Coord a,
-    typename::Maze<T1, T2, T3>::Coord b) {
+int Maze<T1, T2, T3>::getSlope(typename ::Maze<T1, T2, T3>::Coord a,
+                               typename ::Maze<T1, T2, T3>::Coord b) {
   const auto [x1, y1] = a;
   const auto [x2, y2] = b;
-  if (x2-x1 == 0) {
+  if (x2 - x1 == 0) {
     throw SlopeDNEException();
   }
-  return ((y2-y1)/(x2-x1));
+  return ((y2 - y1) / (x2 - x1));
 }
 
 template <typename T1, typename T2, typename T3>
-void Maze<T1, T2, T3>::updateConnectionInPixelMap(unsigned int p1, unsigned int p2) {
+void Maze<T1, T2, T3>::updateConnectionInPixelMap(unsigned int p1,
+                                                  unsigned int p2) {
   const auto p1Coord = this->getCoordOfCellById(p1);
   const auto [p1_x, p1_y] = p1Coord;
   const auto p2Coord = this->getCoordOfCellById(p2);
@@ -75,15 +76,16 @@ void Maze<T1, T2, T3>::updateConnectionInPixelMap(unsigned int p1, unsigned int 
     // y = mx + b
     // y - mx = b
     int slope = this->getSlope(p1Coord, p2Coord);
-    int b = p1_y - (slope*p1_x);
+    int b = p1_y - (slope * p1_x);
     for (unsigned int x = p1_x; x <= p2_x; x++) {
-      int y = (slope*x) + b;
+      int y = (slope * x) + b;
       this->map[x][y] = draw_color;
       Coord c(x, y);
       this->pixels_to_update.push_back(c);
     }
-  } catch (SlopeDNEException &e) {
-    //if slope does not exist, its a vertical line, so set x constant and move y
+  } catch (SlopeDNEException& e) {
+    // if slope does not exist, its a vertical line, so set x constant and move
+    // y
     int x = p1_x;
     int y1, y2;
     if (p1_y < p2_y) {
@@ -111,34 +113,35 @@ void Maze<T1, T2, T3>::updateCellInPixelMap(unsigned int p) {
     return;
   }
   auto connected = this->grid.getCellIdsMatching(p, CONNECTED);
-  if(connected.size() > 0) {
+  if (connected.size() > 0) {
     this->map[x][y] = Maze<T1, T2, T3>::connected_color;
-  }
-  else {
+  } else {
     this->map[x][y] = Maze<T1, T2, T3>::not_connected_color;
   }
 }
 
 template <typename T1, typename T2, typename T3>
 void Maze<T1, T2, T3>::drawMapUpdates() {
-    auto compareCoords = [&] (Maze<T1, T2, T3>::Coord a, Maze<T1, T2, T3>::Coord b) {
-      auto const [x1, y1] = a;
-      auto const [x2, y2] = b;
-      return (x1 == x2 && y1 == y2);
-    };
-    std::sort(this->pixels_to_update.begin(), this->pixels_to_update.end());
-    Maze<T1, T2, T3>::CoordList::iterator i;
-    i = std::unique(this->pixels_to_update.begin(),
-            this->pixels_to_update.begin() + this->pixels_to_update.size(),
-            compareCoords);
-    this->pixels_to_update.resize(std::distance(this->pixels_to_update.begin(),
-            i));
-    for(auto pixel : this->pixels_to_update) {
-        auto const [x, y] = pixel;
-        auto const [r, g, b] = this->map[x][y];
-        this->canvas->SetPixel(x, y, r, g, b);
-    }
-    this->pixels_to_update.clear();
+  auto compareCoords = [&](Maze<T1, T2, T3>::Coord a,
+                           Maze<T1, T2, T3>::Coord b) {
+    auto const [x1, y1] = a;
+    auto const [x2, y2] = b;
+    return (x1 == x2 && y1 == y2);
+  };
+  std::sort(this->pixels_to_update.begin(), this->pixels_to_update.end());
+  Maze<T1, T2, T3>::CoordList::iterator i;
+  i = std::unique(
+      this->pixels_to_update.begin(),
+      this->pixels_to_update.begin() + this->pixels_to_update.size(),
+      compareCoords);
+  this->pixels_to_update.resize(
+      std::distance(this->pixels_to_update.begin(), i));
+  for (auto pixel : this->pixels_to_update) {
+    auto const [x, y] = pixel;
+    auto const [r, g, b] = this->map[x][y];
+    this->canvas->SetPixel(x, y, r, g, b);
+  }
+  this->pixels_to_update.clear();
 }
 
 template <typename T1, typename T2, typename T3>
@@ -175,12 +178,12 @@ float Maze<T1, T2, T3>::generateStep() {
 template <typename T1, typename T2, typename T3>
 void Maze<T1, T2, T3>::updatePixelMap() {
   auto modified_connections = this->grid.getRecentlyModifiedConnections();
-  for (auto & conn : modified_connections) {
+  for (auto& conn : modified_connections) {
     const auto [id1, id2] = conn;
     this->updateConnectionInPixelMap(id1, id2);
   }
   auto modified_cells = this->grid.getRecentlyModifiedCells();
-  for (auto & cell : modified_cells) {
+  for (auto& cell : modified_cells) {
     this->updateCellInPixelMap(cell);
   }
   this->drawMapUpdates();

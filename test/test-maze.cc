@@ -24,28 +24,25 @@ struct TestCanvas {
   int width() { return this->w; };
   int height() { return this->h; };
   std::vector<std::tuple<int, int, int, int, int> > pixel_calls;
-  void SetPixel(int x, int y, int r, int g, int b){
+  void SetPixel(int x, int y, int r, int g, int b) {
     this->pixel_calls.push_back(
-       std::tuple<int, int, int, int, int>(x, y, r, g, b)
-    );
+        std::tuple<int, int, int, int, int>(x, y, r, g, b));
   };
   std::vector<std::tuple<int, int, int, int, int> > getPixelCalls() {
     return this->pixel_calls;
   }
-  void clearPixelCalls() {
-    this->pixel_calls.clear();
-  }
+  void clearPixelCalls() { this->pixel_calls.clear(); }
   std::vector<std::tuple<int, int, int, int, int> > getCallsForSpecificPixel(
-          int tx, int ty) {
-     std::vector<std::tuple<int, int, int, int, int> > matching;
-     for (const auto call: this->pixel_calls) {
-       auto const [x, y, r, g, b] = call;
-       if (x == tx && y == ty) {
-         matching.push_back(call);
-       }
-     }
-     return matching;
-   }
+      int tx, int ty) {
+    std::vector<std::tuple<int, int, int, int, int> > matching;
+    for (const auto call : this->pixel_calls) {
+      auto const [x, y, r, g, b] = call;
+      if (x == tx && y == ty) {
+        matching.push_back(call);
+      }
+    }
+    return matching;
+  }
 };
 
 TEST_CASE("A maze can be created.") {
@@ -63,11 +60,11 @@ TEST_CASE("A maze can be created.") {
     auto calls = c->getPixelCalls();
     for (auto const& call : calls) {
       auto const [x, y, r, g, b] = call;
-      if (x%2 == 0 && y%2 == 0) {
-        CHECK(x/2 < 32);
-        CHECK(x/2 >= 0);
-        CHECK(y/2 < 32);
-        CHECK(y/2 >= 0);
+      if (x % 2 == 0 && y % 2 == 0) {
+        CHECK(x / 2 < 32);
+        CHECK(x / 2 >= 0);
+        CHECK(y / 2 < 32);
+        CHECK(y / 2 >= 0);
         CHECK(r == 255);
         CHECK(g == 255);
         CHECK(b == 255);
@@ -131,24 +128,25 @@ TEST_CASE("A maze can be created.") {
 
     SUBCASE("The intent is realized on the canvas") {
       std::cout << "    (The intent is realized on the canvas)\n";
-      std::vector<std::tuple<int, int, int, int, int> > p = c->getCallsForSpecificPixel(0,0);
+      std::vector<std::tuple<int, int, int, int, int> > p =
+          c->getCallsForSpecificPixel(0, 0);
       CHECK(p.size() == 1);
       CHECK(std::get<2>(p[0]) == 0);
       CHECK(std::get<3>(p[0]) == 255);
       CHECK(std::get<4>(p[0]) == 0);
-      p = c->getCallsForSpecificPixel(0,1);
+      p = c->getCallsForSpecificPixel(0, 1);
       CHECK(p.size() == 1);
       CHECK(std::get<2>(p[0]) == 0);
       CHECK(std::get<3>(p[0]) == 255);
       CHECK(std::get<4>(p[0]) == 0);
-      p = c->getCallsForSpecificPixel(0,2);
+      p = c->getCallsForSpecificPixel(0, 2);
       CHECK(p.size() == 1);
       CHECK(std::get<2>(p[0]) == 0);
       CHECK(std::get<3>(p[0]) == 255);
       CHECK(std::get<4>(p[0]) == 0);
-      p = c->getCallsForSpecificPixel(0,3);
+      p = c->getCallsForSpecificPixel(0, 3);
       CHECK(p.size() == 0);
-      p = c->getCallsForSpecificPixel(0,4);
+      p = c->getCallsForSpecificPixel(0, 4);
       CHECK(p.size() == 1);
       CHECK(std::get<2>(p[0]) == 255);
       CHECK(std::get<3>(p[0]) == 0);
