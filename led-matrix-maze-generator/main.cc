@@ -4,11 +4,11 @@
 #include <unistd.h>
 
 #include <cstdlib>
+#include <chrono>
 #include <exception>
+#include <iostream>
 
 #include "cell.h"
-#include "direction.h"
-#include "grid.h"
 #include "hunt-and-kill.h"
 #include "led-matrix.h"
 #include "maze.h"
@@ -77,24 +77,21 @@ int main(int argc, char **argv) {
 
   rgb_matrix::Canvas *canvas = init_canvas_from_opts(argc, argv);
 
-  //  .. now use matrix
+  //  .. now use canvas
   while (!interrupt_received) {
-    int grid_height = canvas->height() / 2;
-    int grid_width = canvas->width() / 2;
-
     // Create a maze and tell it to generate
-    Grid g = Grid(canvas, grid_height, grid_width);
-    HuntAndKillStrategy HuntAndKill = HuntAndKillStrategy(&g);
-    Maze m(&g, &HuntAndKill);
-    m.generate();
-
+    Maze<HuntAndKillStrategy<> > m(canvas);
+    while (!interrupt_received && !m.generated) {
+      float sleep_time_secs = m.generateStep();
+      m.updatePixelMap();
+      usleep(sleep_time_secs * 1000000);
+    }
     // sleep for a while to bask in the glory of a new maze
     usleep(10 * 1000000);
   }
 
-  // Clear the matrix and remove the resources that are used
+  // Clear the canvas and remove the resources that are used
   canvas->Clear();
   delete canvas;
-  canvas = nullptr;
   return 0;
 }

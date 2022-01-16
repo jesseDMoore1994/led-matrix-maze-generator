@@ -44,7 +44,7 @@ endif
 
 INCDIRS=$(rpi-rgb-led-matrix_inc)
 inc=$(addprefix -I,$(INCDIRS))
-CFLAGS=-W -Wall -Wextra -Wno-unused-parameter $(debug-level-opts) -fPIC
+CFLAGS= --std=c++1z -W -Wall -Wextra -Wno-unused-parameter $(debug-level-opts) -fPIC
 CXXFLAGS=$(CFLAGS)
 LDFLAGS+=-L$(rpi-rgb-led-matrix_lib) -l$(rpi-rgb-led-matrix_libname) -lrt -lm -lpthread
 
@@ -96,7 +96,7 @@ build: $(toolchain) $(rpi-rgb-led-matrix)
 
 testdir = test
 test-srcs := $(wildcard $(testdir)/*.cc)
-objects-without-main := $(filter-out $(led-matrix-maze-generator)/maze-generator.o,$(objects))
+objects-without-main := $(filter-out $(led-matrix-maze-generator)/main.o,$(objects))
 test-objects := $(patsubst %.cc,%.o,$(test-srcs))
 test-executable := $(addprefix $(output-folder)/, test-maze-generator)
 doctest = $(testdir)/doctest.h
