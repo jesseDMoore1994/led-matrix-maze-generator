@@ -1,12 +1,3 @@
-const char* CantWalkException::what() const throw() {
-  return "Cannot walk further, all connectable cells from here have been "
-         "visited";
-}
-
-const char* HuntFailedException::what() const throw() {
-  return "No cell found in the hunt, must be finished with generation.";
-}
-
 template <typename T>
 unsigned int HuntAndKillStrategy<T>::init_current_cell() {
   unsigned int starting_cell = rand() % this->g->num_cells;

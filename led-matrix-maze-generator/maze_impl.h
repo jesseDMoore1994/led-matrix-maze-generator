@@ -2,27 +2,29 @@ const char* SlopeDNEException::what() const throw() {
   return "Line is vertical, slope does not exist.";
 }
 
-template <typename T1, typename T2, typename T3>
-typename Maze<T1, T2, T3>::PixelMap Maze<T1, T2, T3>::initMap() {
+template <typename T1, typename T2, typename T3, typename T4>
+typename Maze<T1, T2, T3, T4>::PixelMap Maze<T1, T2, T3, T4>::initMap() {
   // first set everything as wall color
-  Maze<T1, T2, T3>::PixelMap map(
-      height, Maze<T1, T2, T3>::PixelRow(width, Maze<T1, T2, T3>::wall_color));
+  Maze<T1, T2, T3, T4>::PixelMap map(
+      height,
+      Maze<T1, T2, T3, T4>::PixelRow(width, Maze<T1, T2, T3, T4>::wall_color));
 
   // go through and set each pixel corresponding to a cell as the not connected
   // color
   for (unsigned int i = 0; i < this->grid.num_cells; i++) {
     const auto [current_row, current_col] = this->grid.getRowColFromId(i);
     unsigned int current_x_pos =
-        current_row * Maze<T1, T2, T3>::distance_between_pixels;
+        current_row * Maze<T1, T2, T3, T4>::distance_between_pixels;
     unsigned int current_y_pos =
-        current_col * Maze<T1, T2, T3>::distance_between_pixels;
-    map[current_x_pos][current_y_pos] = Maze<T1, T2, T3>::not_connected_color;
+        current_col * Maze<T1, T2, T3, T4>::distance_between_pixels;
+    map[current_x_pos][current_y_pos] =
+        Maze<T1, T2, T3, T4>::not_connected_color;
   }
   return map;
 }
 
-template <typename T1, typename T2, typename T3>
-void Maze<T1, T2, T3>::drawMap() {
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::drawMap() {
   // for each pixel in the map, set it on the canvas
   for (unsigned int i = 0; i < this->height; i++) {
     for (unsigned int j = 0; j < this->width; j++) {
@@ -32,18 +34,18 @@ void Maze<T1, T2, T3>::drawMap() {
   }
 }
 
-template <typename T1, typename T2, typename T3>
-typename Maze<T1, T2, T3>::Coord Maze<T1, T2, T3>::getCoordOfCellById(
+template <typename T1, typename T2, typename T3, typename T4>
+typename Maze<T1, T2, T3, T4>::Coord Maze<T1, T2, T3, T4>::getCoordOfCellById(
     unsigned int id) {
   const auto [row, col] = this->grid.getRowColFromId(id);
-  unsigned int x = row * Maze<T1, T2, T3>::distance_between_pixels;
-  unsigned int y = col * Maze<T1, T2, T3>::distance_between_pixels;
-  return Maze<T1, T2, T3>::Coord(x, y);
+  unsigned int x = row * Maze<T1, T2, T3, T4>::distance_between_pixels;
+  unsigned int y = col * Maze<T1, T2, T3, T4>::distance_between_pixels;
+  return Maze<T1, T2, T3, T4>::Coord(x, y);
 }
 
-template <typename T1, typename T2, typename T3>
-int Maze<T1, T2, T3>::getSlope(typename ::Maze<T1, T2, T3>::Coord a,
-                               typename ::Maze<T1, T2, T3>::Coord b) {
+template <typename T1, typename T2, typename T3, typename T4>
+int Maze<T1, T2, T3, T4>::getSlope(typename ::Maze<T1, T2, T3, T4>::Coord a,
+                                   typename ::Maze<T1, T2, T3, T4>::Coord b) {
   const auto [x1, y1] = a;
   const auto [x2, y2] = b;
   if (x2 - x1 == 0) {
@@ -52,9 +54,9 @@ int Maze<T1, T2, T3>::getSlope(typename ::Maze<T1, T2, T3>::Coord a,
   return ((y2 - y1) / (x2 - x1));
 }
 
-template <typename T1, typename T2, typename T3>
-void Maze<T1, T2, T3>::updateConnectionInPixelMap(unsigned int p1,
-                                                  unsigned int p2) {
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::updateConnectionInPixelMap(unsigned int p1,
+                                                      unsigned int p2) {
   const auto p1Coord = this->getCoordOfCellById(p1);
   const auto [p1_x, p1_y] = p1Coord;
   const auto p2Coord = this->getCoordOfCellById(p2);
@@ -62,9 +64,9 @@ void Maze<T1, T2, T3>::updateConnectionInPixelMap(unsigned int p1,
   const auto status = this->grid.queryConnection(p1, p2);
   Pixel draw_color;
   if (status == CONNECTED) {
-    draw_color = Maze<T1, T2, T3>::connected_color;
+    draw_color = Maze<T1, T2, T3, T4>::connected_color;
   } else {
-    draw_color = Maze<T1, T2, T3>::wall_color;
+    draw_color = Maze<T1, T2, T3, T4>::wall_color;
   }
 
   // try to get the slope between the two points for drawing.
@@ -103,33 +105,33 @@ void Maze<T1, T2, T3>::updateConnectionInPixelMap(unsigned int p1,
   }
 }
 
-template <typename T1, typename T2, typename T3>
-void Maze<T1, T2, T3>::updateCellInPixelMap(unsigned int p) {
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::updateCellInPixelMap(unsigned int p) {
   const auto coord = this->getCoordOfCellById(p);
   this->pixels_to_update.push_back(coord);
   const auto [x, y] = coord;
   if (this->grid.getCell(p).emphasized) {
-    this->map[x][y] = Maze<T1, T2, T3>::emphasized_color;
+    this->map[x][y] = Maze<T1, T2, T3, T4>::emphasized_color;
     return;
   }
   auto connected = this->grid.getCellIdsMatching(p, CONNECTED);
   if (connected.size() > 0) {
-    this->map[x][y] = Maze<T1, T2, T3>::connected_color;
+    this->map[x][y] = Maze<T1, T2, T3, T4>::connected_color;
   } else {
-    this->map[x][y] = Maze<T1, T2, T3>::not_connected_color;
+    this->map[x][y] = Maze<T1, T2, T3, T4>::not_connected_color;
   }
 }
 
-template <typename T1, typename T2, typename T3>
-void Maze<T1, T2, T3>::drawMapUpdates() {
-  auto compareCoords = [&](Maze<T1, T2, T3>::Coord a,
-                           Maze<T1, T2, T3>::Coord b) {
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::drawMapUpdates() {
+  auto compareCoords = [&](Maze<T1, T2, T3, T4>::Coord a,
+                           Maze<T1, T2, T3, T4>::Coord b) {
     auto const [x1, y1] = a;
     auto const [x2, y2] = b;
     return (x1 == x2 && y1 == y2);
   };
   std::sort(this->pixels_to_update.begin(), this->pixels_to_update.end());
-  Maze<T1, T2, T3>::CoordList::iterator i;
+  Maze<T1, T2, T3, T4>::CoordList::iterator i;
   i = std::unique(
       this->pixels_to_update.begin(),
       this->pixels_to_update.begin() + this->pixels_to_update.size(),
@@ -144,25 +146,22 @@ void Maze<T1, T2, T3>::drawMapUpdates() {
   this->pixels_to_update.clear();
 }
 
-template <typename T1, typename T2, typename T3>
-typename Maze<T1, T2, T3>::PixelMap Maze<T1, T2, T3>::generatePixelMap() {
-  for (unsigned int i = 0; i < this->grid.num_cells; i++) {
-    for (unsigned int j = i; j < this->grid.num_cells; j++) {
-      const auto status = grid.queryConnection(i, j);
-      if (status != CONNECTED) {
-        continue;
-      }
-      this->updateConnectionInPixelMap(i, j);
-    }
-  }
-  for (unsigned int i = 0; i < this->grid.num_cells; i++) {
-    this->updateCellInPixelMap(i);
-  }
-  return map;
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::changeConnectedColor(Maze<T1, T2, T3, T4>::Pixel new_color) {
+  this->connected_color = new_color;
+  this->generatePixelMap();
+  this->drawMap();
 }
 
-template <typename T1, typename T2, typename T3>
-float Maze<T1, T2, T3>::generateStep() {
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::resetCellData() {
+  for(unsigned int i = 0; i < this->grid.num_cells; i++) {
+    this->grid.setCell(i, T3());
+  }
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+float Maze<T1, T2, T3, T4>::generateStep() {
   if (this->generated) {
     throw GenerationCompleteException();
   }
@@ -175,8 +174,47 @@ float Maze<T1, T2, T3>::generateStep() {
   }
 }
 
-template <typename T1, typename T2, typename T3>
-void Maze<T1, T2, T3>::updatePixelMap() {
+template <typename T1, typename T2, typename T3, typename T4>
+float Maze<T1, T2, T3, T4>::solveStep() {
+  if (this->solved) {
+    throw AlreadySolvedException();
+  }
+  if (!this->generated) {
+    throw GenerationIncompleteException();
+  }
+
+  try {
+    return this->solving_strategy.step();
+  } catch (AlreadySolvedException& e) {
+    this->solved = true;
+    return 0;
+  }
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::generatePixelMap() {
+  for (unsigned int i = 0; i < this->grid.num_cells; i++) {
+    for (unsigned int j = i; j < this->grid.num_cells; j++) {
+      const auto status = grid.queryConnection(i, j);
+      if (status < CONNECTABLE) {
+        continue;
+      }
+      this->updateConnectionInPixelMap(i, j);
+    }
+  }
+  for (unsigned int i = 0; i < this->grid.num_cells; i++) {
+    this->updateCellInPixelMap(i);
+  }
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+typename Maze<T1, T2, T3, T4>::PixelMap
+Maze<T1, T2, T3, T4>::getPixelMap() {
+    return this->map;
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::updatePixelMap() {
   auto modified_connections = this->grid.getRecentlyModifiedConnections();
   for (auto& conn : modified_connections) {
     const auto [id1, id2] = conn;
@@ -187,4 +225,11 @@ void Maze<T1, T2, T3>::updatePixelMap() {
     this->updateCellInPixelMap(cell);
   }
   this->drawMapUpdates();
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+void Maze<T1, T2, T3, T4>::swapToSolvingMode() {
+  std::tuple<unsigned int, unsigned int, unsigned int> white({255,255,255});
+  this->changeConnectedColor(white);
+  this->resetCellData();
 }

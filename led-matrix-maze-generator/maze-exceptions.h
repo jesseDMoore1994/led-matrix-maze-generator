@@ -4,4 +4,10 @@
 struct GenerationCompleteException : public std::exception {
   const char* what() const throw();
 };
+struct GenerationIncompleteException : public std::exception {
+  const char* what() const throw();
+};
+struct AlreadySolvedException : public std::exception {
+  const char* what() const throw();
+};
 #endif

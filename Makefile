@@ -22,6 +22,7 @@ docker-args ?= $(docker-interactive) \
 			   -e "CFLAGS=$(CFLAGS)" \
 			   -e "CXXFLAGS=$(CXXFLAGS)" \
 			   -e "INCDIRS=$(INCDIRS)" \
+			   -e "DEBUG=$(DEBUG)" \
 			   -v $(shell pwd):/work
 
 build-env =

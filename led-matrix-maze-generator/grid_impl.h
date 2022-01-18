@@ -92,6 +92,20 @@ void Grid<T>::modifyConnection(unsigned int id_a, unsigned int id_b,
       next_status == CONNECTABLE) {
     throw "Attempted to disconnect from a non-connected state.";
   }
+  if (this->state_matrix[id_a][id_b] < CONNECTED &&
+      this->state_matrix[id_a][id_b] >= PATH_ACTIVE &&
+      next_status == PATH_ACTIVE) {
+    throw "Can only move into active consideration by being connected.";
+  }
+  if (this->state_matrix[id_a][id_b] < PATH_ACTIVE &&
+      this->state_matrix[id_a][id_b] >= CONNECTION_STATUS_ERR &&
+      next_status == PATH_DEAD) {
+    throw "Can only be a dead path if it was alive.";
+  }
+  if (this->state_matrix[id_a][id_b] != PATH_ACTIVE &&
+      next_status == PATH_COMPLETE) {
+    throw "Only active paths can be part of the solution.";
+  }
   this->recently_modified_connections.push_back(
       std::tuple<unsigned int, unsigned int>({id_a, id_b}));
   this->recently_modified_connections.push_back(

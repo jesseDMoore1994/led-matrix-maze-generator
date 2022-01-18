@@ -13,7 +13,8 @@ struct SlopeDNEException : public std::exception {
   const char* what() const throw();
 };
 
-template <typename T1, typename T2 = Cell, typename T3 = rgb_matrix::Canvas>
+template <typename T1, typename T2, typename T3 = Cell,
+          typename T4 = rgb_matrix::Canvas>
 class Maze {
  public:
   using Coord = std::tuple<unsigned int, unsigned int>;
@@ -23,17 +24,22 @@ class Maze {
   using PixelMap = std::vector<PixelRow>;
   static const int distance_between_pixels = 2;
   bool generated;
+  bool solved;
 
  private:
   Pixel wall_color = {0, 0, 0};
   Pixel not_connected_color = {255, 255, 255};
   Pixel connected_color = {0, 255, 0};
   Pixel emphasized_color = {255, 0, 0};
+  Pixel active_color = {0, 255, 0};
+  Pixel dead_color = {255, 0, 0};
+  Pixel complete_color = {255, 0, 0};
   unsigned int height;
   unsigned int width;
-  Grid<T2> grid;
+  Grid<T3> grid;
   T1 generation_strategy;
-  T3* canvas;
+  T2 solving_strategy;
+  T4* canvas;
   PixelMap map;
   CoordList pixels_to_update;
   PixelMap initMap();
@@ -43,23 +49,29 @@ class Maze {
   void updateConnectionInPixelMap(unsigned int, unsigned int);
   void updateCellInPixelMap(unsigned int);
   void drawMapUpdates();
+  void changeConnectedColor(Pixel);
+  void resetCellData();
 
  public:
-  Maze(T3* c)
+  Maze(T4* c)
       : generated(false),
         height(c->height()),
         width(c->width()),
-        grid(Grid<T2>(c->height() / distance_between_pixels,
+        grid(Grid<T3>(c->height() / distance_between_pixels,
                       c->width() / distance_between_pixels)),
         generation_strategy(T1(&grid)),
+        solving_strategy(T2(&grid)),
         canvas(c),
         map(initMap()) {
     drawMap();
   };
 
   float generateStep();
-  PixelMap generatePixelMap();
+  float solveStep();
+  void generatePixelMap();
+  PixelMap getPixelMap();
   void updatePixelMap();
+  void swapToSolvingMode();
 };
 #include "maze_impl.h"
 #endif

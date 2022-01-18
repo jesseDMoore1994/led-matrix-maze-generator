@@ -7,13 +7,18 @@
 
 struct TestStrategy {
   Grid<Cell>* g;
+  bool called_once;
   TestStrategy(Grid<Cell>* grid) : g(grid){};
   float step() {
+    if (called_once) {
+      throw GenerationCompleteException();
+    }
     g->modifyConnection(0, 1, CONNECTED);
     Cell c;
     c.visited = true;
     c.emphasized = true;
     g->setCell(2, c);
+    called_once = true;
     return 0.1;
   };
 };
@@ -49,7 +54,7 @@ TEST_CASE("A maze can be created.") {
   std::cout << "(A maze can be created)\n";
   auto start = std::chrono::high_resolution_clock::now();
   TestCanvas* c = new TestCanvas;
-  Maze<TestStrategy, Cell, TestCanvas> m(c);
+  Maze<TestStrategy, int, Cell, TestCanvas> m(c);
   auto end = std::chrono::high_resolution_clock::now();
   auto duration =
       std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -75,7 +80,8 @@ TEST_CASE("A maze can be created.") {
   SUBCASE("Maze can return a pixel map format") {
     std::cout << "  (Maze can return a pixel map format)\n";
     start = std::chrono::high_resolution_clock::now();
-    auto map = m.generatePixelMap();
+    m.generatePixelMap();
+    auto map = m.getPixelMap();
     end = std::chrono::high_resolution_clock::now();
     duration =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -86,38 +92,11 @@ TEST_CASE("A maze can be created.") {
     }
   }
 
-  SUBCASE("The maze can execute a step of the generaton strategy") {
-    std::cout << "  (The maze can execute a step of the generaton strategy)\n";
-    auto secs = m.generateStep();
-    auto map = m.generatePixelMap();
-
-    SUBCASE(
-        "An amount of time in seconds is returned inticating the time to wait "
-        "before proceeeding to the next step") {
-      std::cout << "    (An amount of time in seconds is returned inticating "
-                   "the time to wait before proceeeding to the next step)\n";
-      CHECK(secs == doctest::Approx(0.1));
-    }
-
-    SUBCASE("Connected cells are rendered as green") {
-      std::cout << "    (Connected cells are rendered as green)\n";
-      CHECK(map[0][0] == Maze<TestStrategy, Cell>::Pixel({0, 255, 0}));
-      CHECK(map[0][1] == Maze<TestStrategy, Cell>::Pixel({0, 255, 0}));
-      CHECK(map[0][2] == Maze<TestStrategy, Cell>::Pixel({0, 255, 0}));
-    }
-
-    SUBCASE("Non-connected cells are rendered with a blank between them") {
-      std::cout << "    (Non-connected cells are rendered with a blank between "
-                   "them)\n";
-      CHECK(map[0][2] == Maze<TestStrategy, Cell>::Pixel({0, 255, 0}));
-      CHECK(map[0][3] == Maze<TestStrategy, Cell>::Pixel({0, 0, 0}));
-      CHECK(map[0][4] == Maze<TestStrategy, Cell>::Pixel({255, 0, 0}));
-    }
-  }
 
   SUBCASE("The maze can update just the pixels that need it") {
     std::cout << "  (The maze can update just the pixels that need it)\n";
     auto secs = m.generateStep();
+    CHECK(secs == doctest::Approx(0.1).epsilon(0.1));
     start = std::chrono::high_resolution_clock::now();
     c->clearPixelCalls();
     m.updatePixelMap();
@@ -146,6 +125,52 @@ TEST_CASE("A maze can be created.") {
       CHECK(std::get<4>(p[0]) == 0);
       p = c->getCallsForSpecificPixel(0, 3);
       CHECK(p.size() == 0);
+      p = c->getCallsForSpecificPixel(0, 4);
+      CHECK(p.size() == 1);
+      CHECK(std::get<2>(p[0]) == 255);
+      CHECK(std::get<3>(p[0]) == 0);
+      CHECK(std::get<4>(p[0]) == 0);
+    }
+  }
+
+  SUBCASE("The maze can refresh to solving mode.") {
+    std::cout << "  (The maze can refresh to solving mode.)\n";
+    auto secs = m.generateStep();
+    CHECK(secs == doctest::Approx(0.1));
+    secs = m.generateStep();
+    CHECK(secs == doctest::Approx(0.0));
+    m.updatePixelMap();
+    c->clearPixelCalls();
+    start = std::chrono::high_resolution_clock::now();
+    m.swapToSolvingMode();
+    end = std::chrono::high_resolution_clock::now();
+    duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "  Time to change connected color: " << duration.count() << "\n";
+
+    SUBCASE("The intent is realized on the canvas") {
+      std::cout << "    (The intent is realized on the canvas)\n";
+      std::vector<std::tuple<int, int, int, int, int> > p =
+          c->getCallsForSpecificPixel(0, 0);
+      CHECK(p.size() == 1);
+      CHECK(std::get<2>(p[0]) == 255);
+      CHECK(std::get<3>(p[0]) == 255);
+      CHECK(std::get<4>(p[0]) == 255);
+      p = c->getCallsForSpecificPixel(0, 1);
+      CHECK(p.size() == 1);
+      CHECK(std::get<2>(p[0]) == 255);
+      CHECK(std::get<3>(p[0]) == 255);
+      CHECK(std::get<4>(p[0]) == 255);
+      p = c->getCallsForSpecificPixel(0, 2);
+      CHECK(p.size() == 1);
+      CHECK(std::get<2>(p[0]) == 255);
+      CHECK(std::get<3>(p[0]) == 255);
+      CHECK(std::get<4>(p[0]) == 255);
+      p = c->getCallsForSpecificPixel(0, 3);
+      CHECK(p.size() == 1);
+      CHECK(std::get<2>(p[0]) == 0);
+      CHECK(std::get<3>(p[0]) == 0);
+      CHECK(std::get<4>(p[0]) == 0);
       p = c->getCallsForSpecificPixel(0, 4);
       CHECK(p.size() == 1);
       CHECK(std::get<2>(p[0]) == 255);

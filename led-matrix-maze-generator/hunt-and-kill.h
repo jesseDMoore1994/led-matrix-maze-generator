@@ -7,11 +7,15 @@
 #include "grid.h"
 #include "maze-exceptions.h"
 struct CantWalkException : public std::exception {
-  const char* what() const throw();
+  const char* what() const throw() {
+    return "Cannot walk further, all connectable cells from here have been visited";
+  }
 };
 
 struct HuntFailedException : public std::exception {
-  const char* what() const throw();
+  const char* what() const throw() {
+    return "No cell found in the hunt, must be finished with generation";
+  };
 };
 
 template <typename T = Cell>

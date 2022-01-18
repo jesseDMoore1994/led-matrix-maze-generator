@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <tuple>
 
 #include "cell.h"
 #include "hunt-and-kill.h"
@@ -80,13 +81,15 @@ int main(int argc, char **argv) {
   //  .. now use canvas
   while (!interrupt_received) {
     // Create a maze and tell it to generate
-    Maze<HuntAndKillStrategy<> > m(canvas);
+    Maze<HuntAndKillStrategy<>, int > m(canvas);
     while (!interrupt_received && !m.generated) {
       float sleep_time_secs = m.generateStep();
       m.updatePixelMap();
       usleep(sleep_time_secs * 1000000);
     }
-    // sleep for a while to bask in the glory of a new maze
+    // Transition to solving mode
+    usleep(10 * 1000000);
+    m.swapToSolvingMode();
     usleep(10 * 1000000);
   }
 

@@ -8,6 +8,9 @@ enum ConnectionStatus {
   NOT_CONNECTABLE,  // The two cells are not adjacent and cannot be connected.
   CONNECTABLE,      // The two cells are adjacent but not currently connected.
   CONNECTED,        // The two cells are adjacent and connected.
+  PATH_ACTIVE,      // The connection is being considered as part of a solution.
+  PATH_DEAD,        // The connection is not part of a solution.
+  PATH_COMPLETE,    // The connection is confirmed to be part of the solution.
   CONNECTION_STATUS_ERR  // An error has occurred if this is used.
 };
 
@@ -68,11 +71,10 @@ enum ConnectionStatus {
     CANNOT_BE_CONNECTED      = 0
     CONNECTABLE              = 1
     CONNECTED                = 2
-    CONNECTION_STATUS_ERR    = 3
- *
- * cell connections can only transition from  CONNECTABLE to CONNECTED and
- * CONNECTED TO CONNECTABLE by external entities. Attempting to transition
- * a from any other state will throw an error.
+    PATH_ACTIVE,             = 3
+    PATH_DEAD,               = 4
+    PATH_COMPLETE,           = 5
+    CONNECTION_STATUS_ERR    = 6
  * */
 
 template <class T>
